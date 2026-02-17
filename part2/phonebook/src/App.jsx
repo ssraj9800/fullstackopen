@@ -9,13 +9,12 @@ const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
+  const [newPlace, setNewPlace] = useState('')
   const [filter, setFilter] = useState('')
   const [message, setMessage] = useState(null)
 
   useEffect(() => {
-    personService.getAll().then(initialPersons => {
-      setPersons(initialPersons)
-    })
+    personService.getAll().then(data => setPersons(data))
   }, [])
 
   const showMessage = (text, type = 'success') => {
@@ -25,56 +24,35 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
+
     const existing = persons.find(p => p.name === newName)
 
     if (existing) {
-      if (window.confirm(`${newName} is already added, replace the old number?`)) {
-        const updatedPerson = { ...existing, number: newNumber }
-
-        personService
-          .update(existing.id, updatedPerson)
-          .then(returnedPerson => {
-            setPersons(persons.map(p =>
-              p.id !== existing.id ? p : returnedPerson
-            ))
-            showMessage(`Updated ${newName}`)
-          })
-          .catch(() => {
-            showMessage(
-              `Information of ${newName} has already been removed from server`,
-              'error'
-            )
-            setPersons(persons.filter(p => p.id !== existing.id))
-          })
-      }
-    } else {
-      personService
-        .create({ name: newName, number: newNumber })
-        .then(returnedPerson => {
-          setPersons(persons.concat(returnedPerson))
-          showMessage(`Added ${newName}`)
-        })
+      alert(`${newName} already exists`)
+      return
     }
 
-    setNewName('')
-    setNewNumber('')
+    const newPerson = {
+      name: newName,
+      number: newNumber,
+      place: newPlace
+    }
+
+    personService.create(newPerson).then(returned => {
+      setPersons(persons.concat(returned))
+      showMessage(`Added ${newName}`)
+      setNewName('')
+      setNewNumber('')
+      setNewPlace('')
+    })
   }
 
   const deletePerson = (id, name) => {
     if (window.confirm(`Delete ${name}?`)) {
-      personService
-        .remove(id)
-        .then(() => {
-          setPersons(persons.filter(p => p.id !== id))
-          showMessage(`Deleted ${name}`)
-        })
-        .catch(() => {
-          showMessage(
-            `Information of ${name} has already been removed from server`,
-            'error'
-          )
-          setPersons(persons.filter(p => p.id !== id))
-        })
+      personService.remove(id).then(() => {
+        setPersons(persons.filter(p => p.id !== id))
+        showMessage(`Deleted ${name}`)
+      })
     }
   }
 
@@ -101,14 +79,13 @@ const App = () => {
         handleNameChange={(e) => setNewName(e.target.value)}
         newNumber={newNumber}
         handleNumberChange={(e) => setNewNumber(e.target.value)}
+        newPlace={newPlace}
+        handlePlaceChange={(e) => setNewPlace(e.target.value)}
       />
 
       <h2>Numbers</h2>
 
-      <Persons
-        persons={personsToShow}
-        deletePerson={deletePerson}
-      />
+      <Persons persons={personsToShow} deletePerson={deletePerson} />
     </div>
   )
 }

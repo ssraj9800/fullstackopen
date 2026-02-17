@@ -3,7 +3,7 @@ const Persons = ({ persons, deletePerson }) => {
     <div>
       {persons.map(person => (
         <p key={person.id}>
-          {person.name} {person.number}{' '}
+          <strong>{person.name}</strong> | {person.number} | {person.place}
           <button onClick={() => deletePerson(person.id, person.name)}>
             delete
           </button>
